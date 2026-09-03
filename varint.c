@@ -62,16 +62,23 @@ unsigned char* varint_encode(const unsigned long long n, unsigned char* buf, int
 unsigned long long varint_decode(const unsigned char* buf, int len, size_t* bytes) {
   unsigned long long result = 0;
   if (bytes != NULL) *bytes = 0;
+  if (buf == NULL || len <= 0) return 0;
+
   int bits = 0;
   const unsigned char* ptr = buf;
   unsigned long long ll;
-  while (*ptr & MSB) {
+
+  while (ptr < buf + len && (*ptr & MSB)) {
     ll = *ptr;
     result += ((ll & 0x7F) << bits);
     ptr++;
     bits += 7;
-    assert((ptr - buf) < len);
+    if (bits > 63) return 0; /* malformed: too many continuation bytes */
   }
+
+  /* truncated varint: buffer ended before the terminating byte */
+  if (ptr >= buf + len) return 0;
+
   ll = *ptr;
   result += ((ll & 0x7F) << bits);
 
