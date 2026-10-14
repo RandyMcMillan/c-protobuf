@@ -22,3 +22,5 @@ clean:
 	cd test; make clean;
 	
 rebuild: clean all
+
+-include ACT.mk
